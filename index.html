@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photosynthesis - Wikipedia</title>
+    <link rel="icon" href="https://en.wikipedia.org/favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        #chatbox::-webkit-scrollbar { width:5px; }
+        #chatbox::-webkit-scrollbar-thumb { background:#3b82f6; border-radius:10px; }
+        @keyframes slideUp   { from{transform:translateY(10px);opacity:0} to{transform:translateY(0);opacity:1} }
+        @keyframes slideDown { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
+        .toast-notify { animation:slideUp .3s ease-out; }
+        @keyframes logoFlash { 0%,100%{color:#60a5fa} 50%{color:#fff;text-shadow:0 0 12px #3b82f6} }
+        .flash { animation:logoFlash .5s ease-in-out 3; }
+
+        #cloak {
+            position:fixed; inset:0; z-index:999999;
+            background:#fff; overflow-y:auto;
+            display:none; font-family:'Linux Libertine',Georgia,Times,serif;
+        }
+        #cloak.active { display:block; }
+        #cloak-inner { max-width:960px; margin:0 auto; padding:20px 24px; }
+        .wiki-header { border-bottom:1px solid #a2a9b1; padding-bottom:4px; margin-bottom:16px; }
+        .wiki-title { font-size:28px; font-weight:normal; color:#000; }
+        .wiki-subtitle { font-size:12px; color:#54595d; font-style:italic; }
+        .wiki-toc { background:#f8f9fa; border:1px solid #a2a9b1; padding:10px 14px; display:inline-block; font-size:12px; margin-bottom:16px; }
+        .wiki-toc-title { font-weight:bold; text-align:center; margin-bottom:6px; }
+        .wiki-toc ol { margin:0; padding-left:20px; color:#0645ad; }
+        .wiki-toc li { margin:2px 0; }
+        .wiki-h2 { font-size:22px; font-weight:normal; border-bottom:1px solid #a2a9b1; margin:20px 0 6px; }
+        .wiki-p { font-size:14px; line-height:1.7; color:#202122; margin-bottom:12px; }
+        .wiki-link { color:#0645ad; text-decoration:none; cursor:pointer; }
+        .wiki-link:hover { text-decoration:underline; }
+        .wiki-infobox { float:right; clear:right; margin:0 0 16px 24px; background:#f8f9fa; border:1px solid #a2a9b1; font-size:12px; width:220px; }
+        .wiki-infobox caption { background:#cee0f2; font-weight:bold; padding:4px; font-size:13px; }
+        .wiki-infobox td { padding:3px 6px; vertical-align:top; border-top:1px solid #eaecf0; }
+        #wiki-taps { position:fixed; bottom:0; right:0; width:60px; height:60px; z-index:1000000; cursor:default; }
+
+        #ban-screen {
+            position:fixed; inset:0; z-index:1000000; background:#000;
+            display:none; flex-direction:column; justify-content:center; align-items:center; user-select:none; text-align:center;
+        }
+
+        #admin-panel {
+            position:fixed; bottom:80px; left:10px; right:10px; max-width:520px; margin:0 auto;
+            background:#080e1c; border:1px solid rgba(59,130,246,.4);
+            border-radius:16px; padding:18px; z-index:200;
+            display:none; box-shadow:0 0 40px rgba(59,130,246,.2);
+            max-height:90vh; overflow-y:auto;
+        }
+        #admin-panel.active { display:block; animation:slideDown .2s ease-out; }
+        .admin-btn {
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            gap:5px; padding:11px 6px; border-radius:10px; font-size:9px; font-weight:700;
+            text-transform:uppercase; letter-spacing:.06em; transition:all .15s; cursor:pointer;
+            font-family:'JetBrains Mono',monospace; border:1px solid transparent;
+        }
+        .admin-btn:active { transform:scale(.95); }
+        .admin-btn svg { width:15px; height:15px; }
+
+        /* Snitch log */
+        #snitch-log { scrollbar-width:thin; scrollbar-color:#1e3a5f #0a0f1a; }
+        #snitch-log::-webkit-scrollbar { width:3px; }
+        #snitch-log::-webkit-scrollbar-thumb { background:#1e3a5f; border-radius:4px; }
+
+        #prompt-modal {
+            position:fixed; inset:0; background:rgba(0,0,0,.78); z-index:400;
+            display:none; align-items:center; justify-content:center; padding:20px;
+        }
+        #prompt-modal.active { display:flex; animation:slideUp .2s ease-out; }
+        #prompt-box {
+            background:#0f172a; border:1px solid rgba(59,130,246,.4);
+            border-radius:14px; padding:20px; width:100%; max-width:340px;
+            box-shadow:0 0 30px rgba(59,130,246,.2);
+        }
+
+        /* Whisper modal */
+        #whisper-modal {
+            position:fixed; inset:0; background:rgba(0,0,0,.78); z-index:400;
+            display:none; align-items:center; justify-content:center; padding:20px;
+        }
+        #whisper-modal.active { display:flex; animation:slideUp .2s ease-out; }
+        #whisper-box {
+            background:#0f172a; border:1px solid rgba(139,92,246,.5);
+            border-radius:14px; padding:20px; width:100%; max-width:340px;
+            box-shadow:0 0 30px rgba(139,92,246,.2);
+        }
+
+        .msg-actions { display:flex; gap:5px; margin-top:5px; flex-wrap:wrap; opacity:0; transition:opacity .15s; pointer-events:none; }
+        .msg-wrap:hover .msg-actions { opacity:1; pointer-events:auto; }
+        @media(max-width:768px){ .msg-actions { opacity:1; pointer-events:auto; } }
+
+        .link-preview { margin-top:8px; border:1px solid rgba(99,102,241,.3); border-radius:10px; overflow:hidden; background:rgba(99,102,241,.05); max-width:280px; }
+        .link-preview-bar { padding:6px 10px; font-size:10px; color:#818cf8; font-family:'JetBrains Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+        .pulse-dot { width:7px; height:7px; border-radius:50%; background:#22c55e; animation:pa 2s infinite; }
+        @keyframes pa { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.85)} }
+        .msg-ignored-label { font-style:italic; font-size:11px; color:#475569; }
+
+        /* Whisper bubble styling */
+        .whisper-bubble { border-color: rgba(139,92,246,.5) !important; background: rgba(139,92,246,.08) !important; }
+        .whisper-tag { font-size:9px; color:#a78bfa; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+
+        /* Reactions */
+        .reaction-bar { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+        .reaction-pill {
+            display:inline-flex; align-items:center; gap:3px;
+            background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.25);
+            border-radius:999px; padding:2px 8px; font-size:13px; cursor:pointer;
+            transition:all .15s; user-select:none;
+        }
+        .reaction-pill:hover { background:rgba(59,130,246,.25); border-color:rgba(59,130,246,.5); }
+        .reaction-pill.mine { background:rgba(59,130,246,.28); border-color:rgba(59,130,246,.6); }
+        .reaction-pill .r-count { font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace; font-weight:700; }
+        .react-btn {
+            background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+            border-radius:999px; padding:2px 7px; font-size:12px; cursor:pointer;
+            transition:all .15s; color:#64748b;
+        }
+        .react-btn:hover { background:rgba(255,255,255,.12); color:#94a3b8; }
+
+        /* Reaction emoji picker (mini) */
+        #react-popup {
+            position:fixed; z-index:500;
+            background:#0f172a; border:1px solid rgba(59,130,246,.35);
+            border-radius:12px; padding:8px; display:none;
+            box-shadow:0 8px 32px rgba(0,0,0,.7);
+        }
+        #react-popup.active { display:flex; flex-wrap:wrap; gap:3px; width:220px; animation:slideUp .12s ease-out; }
+        .react-pick { font-size:20px; padding:3px 5px; border-radius:6px; cursor:pointer; transition:background .1s; }
+        .react-pick:hover { background:rgba(59,130,246,.2); }
+
+        /* Emoji picker */
+        #emoji-picker {
+            position:fixed; bottom:72px; right:60px; z-index:300;
+            background:#0f172a; border:1px solid rgba(59,130,246,.3);
+            border-radius:14px; padding:10px; display:none;
+            box-shadow:0 0 30px rgba(0,0,0,.6); width:280px;
+        }
+        #emoji-picker.active { display:block; animation:slideUp .15s ease-out; }
+        #emoji-search { width:100%; background:#1e293b; border:1px solid #334155; border-radius:8px; padding:5px 10px; color:#fff; font-size:12px; outline:none; margin-bottom:8px; }
+        .emoji-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:2px; max-height:180px; overflow-y:auto; }
+        .emoji-grid::-webkit-scrollbar { width:3px; }
+        .emoji-grid::-webkit-scrollbar-thumb { background:#1e3a5f; border-radius:4px; }
+        .emoji-btn { font-size:20px; padding:3px; border-radius:6px; cursor:pointer; text-align:center; transition:background .1s; line-height:1.3; }
+        .emoji-btn:hover { background:rgba(59,130,246,.2); }
+        .emoji-cat-tab { font-size:16px; padding:3px 5px; border-radius:6px; cursor:pointer; transition:background .1s; }
+        .emoji-cat-tab:hover { background:rgba(59,130,246,.15); }
+        .emoji-cat-tab.active-cat { background:rgba(59,130,246,.3); outline:1px solid rgba(59,130,246,.5); }
+        .emoji-cat { font-size:9px; color:#475569; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.05em; margin:6px 0 3px; }
+    </style>
+</head>
+<body id="body" class="bg-slate-900 h-screen flex flex-col text-white overflow-hidden">
+
+    <div id="ban-screen">
+        <div class="mono text-red-600 text-3xl font-bold mb-3">ACCESS_DENIED</div>
+        <div class="mono text-red-900 text-sm mt-2">This device has been permanently banned.</div>
+        <div class="mono text-slate-700 text-xs mt-4">Contact admin to appeal.</div>
+    </div>
+
+    <!-- FAKE WIKIPEDIA CLOAK -->
+    <div id="cloak">
+        <div id="wiki-taps"></div>
+        <div id="cloak-inner"><!-- injected by JS --></div>
+    </div>
+
+    <!-- PROMPT MODAL -->
+    <div id="prompt-modal">
+        <div id="prompt-box">
+            <div id="prompt-title" class="mono text-blue-400 font-bold text-xs uppercase tracking-widest mb-3"></div>
+            <input id="prompt-input" type="text" maxlength="120"
+                class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500 mb-4 mono placeholder-slate-500">
+            <div class="flex gap-2">
+                <button id="prompt-ok" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg mono text-xs font-bold uppercase transition-colors">Confirm</button>
+                <button id="prompt-cancel" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-300 py-2 rounded-lg mono text-xs font-bold uppercase transition-colors">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WHISPER MODAL -->
+    <div id="whisper-modal">
+        <div id="whisper-box">
+            <div class="mono text-purple-400 font-bold text-xs uppercase tracking-widest mb-1">🤫 Whisper to <span id="whisper-target-name" class="text-white"></span></div>
+            <div class="mono text-slate-600 text-[9px] mb-3">Only they will see this message</div>
+            <input id="whisper-input" type="text" maxlength="300" placeholder="Secret message..."
+                class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-purple-500 mb-4 mono placeholder-slate-500">
+            <div class="flex gap-2">
+                <button id="whisper-ok" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white py-2 rounded-lg mono text-xs font-bold uppercase transition-colors">Send Whisper</button>
+                <button id="whisper-cancel" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-300 py-2 rounded-lg mono text-xs font-bold uppercase transition-colors">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin-panel">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                <span class="mono text-blue-400 font-bold text-xs tracking-widest uppercase">Shadow Admin</span>
+            </div>
+            <button onclick="closeAdmin()" class="mono text-slate-500 hover:text-slate-300 text-xs transition-colors">close ✕</button>
+        </div>
+        <div class="border-t border-slate-800 mb-3"></div>
+        <div class="grid grid-cols-4 gap-2">
+            <button onclick="clearChat()" class="admin-btn bg-red-950/60 border-red-800/40 text-red-400 hover:bg-red-900/70 hover:border-red-600/50"><i data-lucide="trash-2"></i>Wipe All</button>
+            <button onclick="adminAlert()" class="admin-btn bg-blue-950/60 border-blue-800/40 text-blue-400 hover:bg-blue-900/70 hover:border-blue-600/50"><i data-lucide="megaphone"></i>Alert</button>
+            <button onclick="setLock(true)" class="admin-btn bg-orange-950/60 border-orange-800/40 text-orange-400 hover:bg-orange-900/70 hover:border-orange-600/50"><i data-lucide="lock"></i>Lock</button>
+            <button onclick="setLock(false)" class="admin-btn bg-green-950/60 border-green-800/40 text-green-400 hover:bg-green-900/70 hover:border-green-600/50"><i data-lucide="unlock"></i>Unlock</button>
+            <button onclick="remoteKick()" class="admin-btn bg-slate-800/60 border-slate-700/40 text-slate-300 hover:bg-slate-700 hover:border-slate-500"><i data-lucide="user-x"></i>Kick</button>
+            <button onclick="remoteBan()" class="admin-btn bg-red-950/80 border-red-900/60 text-red-500 hover:bg-red-900 hover:border-red-600"><i data-lucide="ban"></i>Ban</button>
+            <button onclick="remoteUnban()" class="admin-btn bg-slate-800/60 border-slate-700/40 text-slate-300 hover:bg-slate-700 hover:border-slate-500"><i data-lucide="user-check"></i>Unban</button>
+            <button onclick="forceReload()" class="admin-btn bg-purple-950/60 border-purple-800/40 text-purple-400 hover:bg-purple-900/70 hover:border-purple-600/50"><i data-lucide="refresh-cw"></i>Reload All</button>
+            <button onclick="remoteMute()" class="admin-btn bg-yellow-950/60 border-yellow-800/40 text-yellow-400 hover:bg-yellow-900/70 hover:border-yellow-600/50 col-span-2"><i data-lucide="mic-off"></i>Mute User</button>
+            <button onclick="remoteUnmute()" class="admin-btn bg-slate-800/60 border-slate-700/40 text-slate-300 hover:bg-slate-700 hover:border-slate-500 col-span-2"><i data-lucide="mic"></i>Unmute User</button>
+        </div>
+        <!-- SNITCH LOG -->
+        <div class="border-t border-slate-800 mt-3 pt-3">
+            <div class="flex justify-between items-center mb-1.5">
+                <span class="mono text-slate-400 text-[10px] uppercase tracking-widest font-bold">🔍 Snitch Log</span>
+                <button onclick="document.getElementById('snitch-log').innerHTML=''" class="mono text-slate-700 hover:text-red-400 text-[9px] transition-colors">clear</button>
+            </div>
+            <div id="snitch-log" class="bg-black/50 border border-slate-800 rounded-lg p-2 h-32 overflow-y-auto flex flex-col gap-0.5"></div>
+        </div>
+        <div class="border-t border-slate-800 mt-3 pt-2">
+            <div class="mono text-slate-700 text-[9px]">/wipe /lock /unlock /cloak /alert /refresh /logs /clearlogs /kick /ban /mute [name] · fp-ban active</div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <div id="header" class="bg-slate-800 px-4 py-3 border-b border-slate-700 flex justify-between items-center z-40 shrink-0">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <h1 id="main-logo" class="mono text-lg font-bold text-blue-400 tracking-widest select-none">TITAN_CHAT</h1>
+                <div class="flex items-center gap-1.5 bg-green-500/10 border border-green-500/25 px-2 py-0.5 rounded-full cursor-pointer" onclick="toggleOnlinePanel()">
+                    <div class="pulse-dot"></div>
+                    <span id="online-count" class="mono text-[10px] text-green-400 font-bold">0 Online</span>
+                </div>
+            </div>
+            <div id="typing-indicator" class="mono text-[10px] text-blue-400/70 italic h-4 opacity-0 transition-opacity mt-0.5"></div>
+        </div>
+        <div class="flex gap-2 items-center">
+            <button onclick="toggleNotifications()" id="notif-btn" class="p-2 rounded-lg bg-slate-700 border border-slate-600/50 text-sm hover:bg-slate-600 transition-colors">🔇</button>
+            <button onclick="toggleTheme()" class="p-2 rounded-lg bg-slate-700 border border-slate-600/50 hover:bg-slate-600 transition-colors"><span id="theme-icon">🌙</span></button>
+        </div>
+    </div>
+
+    <!-- ONLINE PANEL -->
+    <div id="online-panel" class="hidden bg-slate-800/95 border-b border-slate-700 px-4 py-3 shrink-0 z-30">
+        <div class="mono text-[9px] text-slate-500 uppercase tracking-widest mb-2">Online now</div>
+        <div id="online-list" class="flex flex-wrap gap-2"></div>
+    </div>
+
+    <div id="chatbox" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3"></div>
+    <div id="seen-row" class="px-4 py-1 mono text-[10px] text-slate-600 italic h-6 truncate shrink-0"></div>
+    <div id="toast-container" class="fixed bottom-28 left-0 right-0 flex flex-col items-center gap-2 z-[150] pointer-events-none px-4"></div>
+
+    <div id="reply-bar" class="hidden px-5 py-2 bg-blue-500/10 border-t border-blue-500/30 flex justify-between items-center shrink-0">
+        <div class="mono text-xs text-blue-400 truncate">↩ Replying to <span id="reply-user" class="font-bold text-white"></span></div>
+        <button onclick="cancelReply()" class="text-blue-400 hover:text-white font-bold ml-2 text-lg leading-none">&times;</button>
+    </div>
+
+    <!-- REACTION POPUP -->
+    <div id="react-popup"></div>
+
+    <!-- EMOJI PICKER -->
+    <div id="emoji-picker">
+        <input id="emoji-search" placeholder="Search emoji..." oninput="filterEmoji(this.value)">
+        <div id="emoji-cat-tabs" style="display:flex;gap:2px;margin-bottom:6px;flex-wrap:wrap;"></div>
+        <div id="emoji-grid" class="emoji-grid"></div>
+    </div>
+
+    <!-- FOOTER -->
+    <div id="footer" class="p-3 bg-slate-800 border-t border-slate-700 z-40 shrink-0">
+        <div class="max-w-5xl mx-auto flex items-center gap-2">
+            <input id="username" type="text" placeholder="Name" maxlength="12"
+                oninput="localStorage.setItem('titan_name', this.value)"
+                class="mono w-20 sm:w-28 bg-slate-700 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500/50 shrink-0 placeholder-slate-500">
+            <input id="msg" type="text" placeholder="Message, /cmd, or paste image..." maxlength="500"
+                class="flex-1 bg-slate-700 border border-slate-600/50 rounded-lg px-4 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500/50 placeholder-slate-500">
+            <button onclick="document.getElementById('file-input').click()" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-blue-400 border border-slate-600/50 shrink-0 transition-colors">
+                <i data-lucide="paperclip" class="w-4 h-4"></i>
+            </button>
+            <input type="file" id="file-input" class="hidden" accept="image/*">
+            <button onclick="toggleEmojiPicker()" id="emoji-btn" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-yellow-400 border border-slate-600/50 shrink-0 transition-colors text-lg leading-none">😊</button>
+            <button onclick="send()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-bold transition-all active:scale-95 flex items-center gap-1.5 shrink-0">
+                <span class="hidden sm:inline text-sm">Send</span>
+                <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+
+    <audio id="ding" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded, onChildRemoved, serverTimestamp,
+                 remove, onValue, query, limitToLast, orderByKey, onDisconnect, set, get }
+            from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB4mHga0COSF7vdTCo1TSxIuQJ9xk863pY",
+            authDomain: "ultra-io.firebaseapp.com",
+            databaseURL: "https://ultra-io-default-rtdb.firebaseio.com",
+            projectId: "ultra-io",
+            storageBucket: "ultra-io.firebasestorage.app",
+            messagingSenderId: "357640027435",
+            appId: "1:357640027435:web:80b86d8646c48ffdad596e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db  = getDatabase(app);
+        const msgRef      = ref(db, 'messages');
+        const onlineRef   = ref(db, 'online');
+        const typingRef   = ref(db, 'typing');
+        const lastMsgRef  = ref(db, 'lastMessageSeen');
+        const configRef   = ref(db, 'config');
+        const securityRef = ref(db, 'security');
+        const reloadRef   = ref(db, 'adminReload');
+        const snitchRef   = ref(db, 'snitchLog');
+        const reactionsRef = ref(db, 'reactions');
+        const q = query(msgRef, limitToLast(50));
+
+        let isDark = true, notifOn = false, replyData = null;
+        const myUid    = Math.random().toString(36).substring(7);
+        const joinTime = Date.now();
+        const ignoredUsers = new Set();
+        lucide.createIcons();
+
+        // ── BROWSER FINGERPRINT ───────────────────────────────────────────────────
+        // Never cached — always recomputed from hardware so clearing cookies won't help.
+        async function getFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top'; ctx.font = '14px Arial';
+            ctx.fillStyle = '#f60'; ctx.fillRect(125,1,62,20);
+            ctx.fillStyle = '#069'; ctx.fillText('Titan',2,15);
+            ctx.fillStyle = 'rgba(102,204,0,0.7)'; ctx.fillText('Titan',4,17);
+            let gl = ''; try { const w=document.createElement('canvas').getContext('webgl'); const d=w.getExtension('WEBGL_debug_renderer_info'); gl=w.getParameter(d.UNMASKED_RENDERER_WEBGL)||''; } catch(e){}
+            const signals = [
+                navigator.userAgent, navigator.language,
+                navigator.hardwareConcurrency, navigator.deviceMemory||0,
+                screen.width+'x'+screen.height+'x'+screen.colorDepth,
+                new Date().getTimezoneOffset(),
+                navigator.platform||'',
+                navigator.maxTouchPoints||0,
+                gl,
+                canvas.toDataURL().slice(-300)
+            ].join('||');
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(signals));
+            return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,40);
+        }
+
+        // Clear any stale seen entry from a previous session immediately
+        remove(ref(db, 'lastMessageSeen/' + myUid));
+
+        let myFP = '';
+        // ADMIN_FP is set once fingerprint is known — slash commands only work for this fp
+        let isAdmin = false;
+        getFingerprint().then(fp => {
+            myFP = fp;
+            set(ref(db, 'fingerprints/' + myUid), fp);
+            onValue(ref(db, 'security/fpban/' + fp), snap => {
+                if (snap.val()) {
+                    document.getElementById('ban-screen').style.display = 'flex';
+                    document.getElementById('body').style.display = 'none';
+                }
+            });
+            // Check if this fp is the registered admin fp
+            onValue(ref(db, 'adminFP'), snap => {
+                if (snap.val() && snap.val() === fp) isAdmin = true;
+            });
+        });
+
+        // ── SNITCH LOG ────────────────────────────────────────────────────────────
+        function snitch(icon, msg) {
+            // Write to Firebase so it persists for admin across sessions
+            push(snitchRef, { icon, msg, at: Date.now() });
+        }
+        // Listen and render snitch log
+        onChildAdded(query(snitchRef, limitToLast(60)), snap => {
+            const d = snap.val();
+            const log = document.getElementById('snitch-log');
+            if (!log) return;
+            const row = document.createElement('div');
+            row.className = 'flex gap-1.5 items-start';
+            const t = new Date(d.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+            row.innerHTML = '<span class="text-slate-600 shrink-0" style="font-size:9px">'+t+'</span>'+
+                '<span style="font-size:10px">'+d.icon+'</span>'+
+                '<span class="text-slate-300" style="font-size:10px;line-height:1.4">'+d.msg+'</span>';
+            log.appendChild(row);
+            log.scrollTop = log.scrollHeight;
+        });
+
+        // ── CLOAK — MULTI-PAGE RANDOM ──────────────────────────────────────────────
+        const cloak = document.getElementById('cloak');
+        let cloaked = false, cloakTaps = 0, cloakTimer = null;
+
+        // ── FAKE PAGE LIBRARY ──────────────────────────────────────────────────────
+        const CLOAK_PAGES = [
+
+          // 1. WIKIPEDIA — Photosynthesis
+          { title:'Photosynthesis - Wikipedia', favicon:'https://en.wikipedia.org/favicon.ico', render: () => `
+            <div style="font-family:'Linux Libertine',Georgia,Times,serif;max-width:960px;margin:0 auto;padding:20px 24px">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                <img src="https://en.wikipedia.org/static/images/icons/wikipedia.png" style="height:40px" onerror="this.style.display='none'">
+                <div style="font-size:11px;color:#54595d;line-height:1.4">The Free Encyclopedia<br><span style="color:#0645ad">Main page</span> · <span style="color:#0645ad">Contents</span> · <span style="color:#0645ad">Random article</span></div>
+              </div>
+              <div style="border-bottom:1px solid #a2a9b1;padding-bottom:4px;margin-bottom:16px">
+                <div style="font-size:28px;font-weight:normal;color:#000">Photosynthesis</div>
+                <div style="font-size:12px;color:#54595d;font-style:italic">From Wikipedia, the free encyclopedia</div>
+              </div>
+              <table style="float:right;clear:right;margin:0 0 16px 24px;background:#f8f9fa;border:1px solid #a2a9b1;font-size:12px;width:220px">
+                <caption style="background:#cee0f2;font-weight:bold;padding:4px;font-size:13px">Photosynthesis</caption>
+                <tr><td colspan="2" style="text-align:center;padding:6px"><div style="width:200px;height:130px;background:#d4edda;display:flex;align-items:center;justify-content:center;font-size:11px;color:#666">[ Diagram ]</div></td></tr>
+                <tr><td style="padding:3px 6px;border-top:1px solid #eaecf0"><b>Type</b></td><td style="padding:3px 6px;border-top:1px solid #eaecf0">Metabolic pathway</td></tr>
+                <tr><td style="padding:3px 6px;border-top:1px solid #eaecf0"><b>Reactants</b></td><td style="padding:3px 6px;border-top:1px solid #eaecf0">CO₂, H₂O, light</td></tr>
+                <tr><td style="padding:3px 6px;border-top:1px solid #eaecf0"><b>Products</b></td><td style="padding:3px 6px;border-top:1px solid #eaecf0">Glucose, O₂</td></tr>
+              </table>
+              <p style="font-size:14px;line-height:1.7;color:#202122;margin-bottom:12px"><b>Photosynthesis</b> is a process used by <span style="color:#0645ad">plants</span>, <span style="color:#0645ad">algae</span>, and certain <span style="color:#0645ad">bacteria</span> to convert light energy into chemical energy stored in glucose.</p>
+              <div style="font-size:22px;font-weight:normal;border-bottom:1px solid #a2a9b1;margin:20px 0 6px">Overview</div>
+              <p style="font-size:14px;line-height:1.7;color:#202122;margin-bottom:12px">In most plants, photosynthesis occurs in the leaves, in mesophyll cells containing chloroplasts. The overall reaction: 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂.</p>
+              <div style="font-size:22px;font-weight:normal;border-bottom:1px solid #a2a9b1;margin:20px 0 6px">Light-dependent reactions</div>
+              <p style="font-size:14px;line-height:1.7;color:#202122;margin-bottom:12px">Light energy absorbed by chlorophyll drives synthesis of ATP and NADPH, splitting water to release oxygen. These reactions occur in the thylakoid membranes of the chloroplast.</p>
+              <div style="font-size:22px;font-weight:normal;border-bottom:1px solid #a2a9b1;margin:20px 0 6px">Factors affecting rate</div>
+              <p style="font-size:14px;line-height:1.7;color:#202122;margin-bottom:12px">Rate is influenced by light intensity, CO₂ concentration, and temperature. At low light the rate increases proportionally; above a threshold other factors become limiting.</p>
+              <div style="clear:both;border-top:1px solid #a2a9b1;margin-top:20px;padding-top:8px;font-size:11px;color:#54595d">This page was last edited on 2 March 2026. Text available under CC BY-SA 4.0.</div>
+            </div>` },
+
+          // 2. GOOGLE DOCS — Biology Notes
+          { title:'Biology Notes - Google Docs', favicon:'https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico', render: () => `
+            <div style="font-family:'Google Sans',Arial,sans-serif;background:#fff;min-height:100vh">
+              <div style="background:#fff;border-bottom:1px solid #e0e0e0;padding:8px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
+                <img src="https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico" style="width:24px;height:24px" onerror="this.style.display='none'">
+                <div>
+                  <div style="font-size:18px;color:#202124;font-weight:400">Biology Notes — Unit 4</div>
+                  <div style="font-size:11px;color:#5f6368">Last edit was seconds ago</div>
+                </div>
+                <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+                  <div style="background:#1a73e8;color:#fff;padding:6px 16px;border-radius:4px;font-size:13px;font-weight:500">Share</div>
+                </div>
+              </div>
+              <div style="display:flex;background:#f8f9fa;border-bottom:1px solid #e0e0e0;padding:4px 8px;gap:4px;font-size:13px;color:#3c4043">
+                <span style="padding:4px 8px;cursor:pointer">File</span><span style="padding:4px 8px;cursor:pointer">Edit</span><span style="padding:4px 8px;cursor:pointer">View</span><span style="padding:4px 8px;cursor:pointer">Insert</span><span style="padding:4px 8px;cursor:pointer">Format</span><span style="padding:4px 8px;cursor:pointer">Tools</span>
+              </div>
+              <div style="max-width:816px;margin:24px auto;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);padding:96px 96px;min-height:1056px">
+                <div style="font-size:26px;font-weight:400;color:#202124;margin-bottom:24px">Biology Notes — Unit 4: Cellular Processes</div>
+                <div style="font-size:16px;font-weight:600;color:#202124;margin-bottom:8px">4.1 Photosynthesis</div>
+                <p style="font-size:14px;color:#202124;line-height:1.8;margin-bottom:16px">Photosynthesis is the process by which plants convert light energy into chemical energy. The equation is: <b>6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ + 6O₂</b></p>
+                <div style="font-size:16px;font-weight:600;color:#202124;margin-bottom:8px">4.2 Cellular Respiration</div>
+                <p style="font-size:14px;color:#202124;line-height:1.8;margin-bottom:16px">Cellular respiration is the process of breaking down glucose to release energy in the form of ATP. Occurs in three stages: Glycolysis, Krebs Cycle, and Electron Transport Chain.</p>
+                <div style="font-size:16px;font-weight:600;color:#202124;margin-bottom:8px">4.3 Key Vocabulary</div>
+                <p style="font-size:14px;color:#202124;line-height:1.8;margin-bottom:8px">• <b>Chloroplast</b> — organelle where photosynthesis occurs</p>
+                <p style="font-size:14px;color:#202124;line-height:1.8;margin-bottom:8px">• <b>Mitochondria</b> — organelle where cellular respiration occurs</p>
+                <p style="font-size:14px;color:#202124;line-height:1.8;margin-bottom:8px">• <b>ATP</b> — adenosine triphosphate, the energy currency of the cell</p>
+                <p style="font-size:14px;color:#202124;line-height:1.8;margin-bottom:8px">• <b>NADPH</b> — electron carrier used in light-dependent reactions</p>
+                <p style="font-size:14px;color:#202124;line-height:1.8;margin-bottom:24px">• <b>Stroma</b> — fluid-filled space inside the chloroplast</p>
+                <div style="font-size:16px;font-weight:600;color:#202124;margin-bottom:8px">4.4 Test Prep</div>
+                <p style="font-size:14px;color:#202124;line-height:1.8">Review chapters 7–9. Practice diagram labelling. Quiz on Friday covering all of Unit 4 material including both photosynthesis and respiration pathways.</p>
+              </div>
+            </div>` },
+
+          // 3. GOOGLE DRIVE
+          { title:'My Drive - Google Drive', favicon:'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png', render: () => `
+            <div style="font-family:'Google Sans',Arial,sans-serif;background:#fff;min-height:100vh">
+              <div style="background:#fff;border-bottom:1px solid #e0e0e0;padding:8px 16px;display:flex;align-items:center;gap:12px">
+                <img src="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png" style="width:28px" onerror="this.style.display='none'">
+                <span style="font-size:22px;color:#5f6368;font-weight:300">Drive</span>
+                <div style="margin-left:16px;flex:1;background:#f1f3f4;border-radius:24px;padding:8px 16px;display:flex;align-items:center;gap:8px;max-width:600px">
+                  <span style="color:#5f6368;font-size:18px">🔍</span>
+                  <span style="color:#5f6368;font-size:14px">Search in Drive</span>
+                </div>
+                <div style="margin-left:auto;width:32px;height:32px;background:#1a73e8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">S</div>
+              </div>
+              <div style="display:flex;min-height:calc(100vh - 60px)">
+                <div style="width:220px;padding:8px;border-right:1px solid #e0e0e0;flex-shrink:0">
+                  <div style="background:#c2e7ff;border-radius:20px;padding:12px 16px;display:flex;align-items:center;gap:8px;margin-bottom:4px;cursor:pointer">
+                    <span>➕</span><span style="font-size:14px;font-weight:500">New</span>
+                  </div>
+                  <div style="padding:8px 16px;font-size:14px;color:#202124;cursor:pointer;border-radius:20px;background:#e8f0fe">🏠 My Drive</div>
+                  <div style="padding:8px 16px;font-size:14px;color:#5f6368;cursor:pointer;border-radius:20px">👥 Shared with me</div>
+                  <div style="padding:8px 16px;font-size:14px;color:#5f6368;cursor:pointer;border-radius:20px">🕐 Recent</div>
+                  <div style="padding:8px 16px;font-size:14px;color:#5f6368;cursor:pointer;border-radius:20px">⭐ Starred</div>
+                  <div style="padding:8px 16px;font-size:14px;color:#5f6368;cursor:pointer;border-radius:20px">🗑 Trash</div>
+                </div>
+                <div style="flex:1;padding:16px">
+                  <div style="font-size:14px;font-weight:500;color:#202124;margin-bottom:12px">My Drive</div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px">
+                    ${['📁 School Projects','📁 Photos','📁 Work Docs','📁 Personal'].map(f=>`<div style="border:1px solid #e0e0e0;border-radius:8px;padding:16px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;color:#202124">${f}</div>`).join('')}
+                  </div>
+                  <div style="font-size:14px;font-weight:500;color:#202124;margin-bottom:12px">Recent files</div>
+                  <table style="width:100%;border-collapse:collapse;font-size:13px">
+                    <tr style="color:#5f6368;border-bottom:1px solid #e0e0e0"><td style="padding:8px">Name</td><td style="padding:8px">Owner</td><td style="padding:8px">Last modified</td></tr>
+                    ${[['📄 Biology Notes — Unit 4','me','Mar 18, 2026'],['📊 Budget Q1 2026','me','Mar 15, 2026'],['📄 Essay Draft - History','me','Mar 12, 2026'],['📊 Class Schedule','me','Mar 10, 2026'],['📄 Resume v3','me','Mar 5, 2026']].map(([n,o,d])=>`<tr style="border-bottom:1px solid #f1f3f4;cursor:pointer" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background=''"><td style="padding:8px">${n}</td><td style="padding:8px">${o}</td><td style="padding:8px">${d}</td></tr>`).join('')}
+                  </table>
+                </div>
+              </div>
+            </div>` },
+
+          // 4. KHAN ACADEMY
+          { title:'Algebra basics | Khan Academy', favicon:'https://cdn.kastatic.org/images/favicon.ico', render: () => `
+            <div style="font-family:Lato,Arial,sans-serif;background:#fff;min-height:100vh">
+              <div style="background:#fff;border-bottom:1px solid #e0e0e0;padding:0 24px;display:flex;align-items:center;gap:20px;height:56px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:36px;height:36px;background:#14bf96;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">K</div>
+                  <span style="font-size:18px;color:#21242c;font-weight:700">Khan Academy</span>
+                </div>
+                <div style="display:flex;gap:16px;font-size:14px;color:#21242c;margin-left:16px">
+                  <span style="cursor:pointer">Courses</span><span style="cursor:pointer">Math</span><span style="cursor:pointer">Science</span><span style="cursor:pointer">Computing</span>
+                </div>
+                <div style="margin-left:auto;background:#1865f2;color:#fff;padding:6px 16px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer">Donate</div>
+              </div>
+              <div style="display:flex;max-width:1100px;margin:0 auto;padding:32px 24px;gap:32px">
+                <div style="width:260px;flex-shrink:0">
+                  <div style="font-size:13px;font-weight:700;color:#21242c;margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Algebra basics</div>
+                  <div style="font-size:13px;color:#1865f2;padding:8px;border-radius:4px;background:#e8f0fe;margin-bottom:4px;cursor:pointer">📘 Foundations</div>
+                  <div style="font-size:13px;color:#21242c;padding:8px;border-radius:4px;margin-bottom:4px;cursor:pointer">📘 Algebraic thinking</div>
+                  <div style="font-size:13px;color:#21242c;padding:8px;border-radius:4px;margin-bottom:4px;cursor:pointer">📘 Linear equations</div>
+                  <div style="font-size:13px;color:#21242c;padding:8px;border-radius:4px;margin-bottom:4px;cursor:pointer">📘 Inequalities</div>
+                  <div style="font-size:13px;color:#21242c;padding:8px;border-radius:4px;margin-bottom:4px;cursor:pointer">📘 Graphing lines</div>
+                  <div style="font-size:13px;color:#21242c;padding:8px;border-radius:4px;cursor:pointer">📘 Systems of equations</div>
+                </div>
+                <div style="flex:1">
+                  <div style="font-size:24px;font-weight:700;color:#21242c;margin-bottom:8px">Foundations</div>
+                  <div style="font-size:14px;color:#626975;margin-bottom:24px">Learn the basics of algebra—focused on common mathematical relationships, such as linear relationships.</div>
+                  <div style="background:#f7f8fa;border-radius:8px;padding:20px;margin-bottom:16px">
+                    <div style="font-size:16px;font-weight:600;color:#21242c;margin-bottom:8px">🎬 Intro to variables</div>
+                    <div style="font-size:13px;color:#626975;margin-bottom:12px">Learn what variables are and how they're used in algebraic expressions.</div>
+                    <div style="background:#1865f2;color:#fff;display:inline-block;padding:6px 16px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer">Watch video</div>
+                  </div>
+                  <div style="background:#f7f8fa;border-radius:8px;padding:20px;margin-bottom:16px">
+                    <div style="font-size:16px;font-weight:600;color:#21242c;margin-bottom:8px">✏️ Writing expressions</div>
+                    <div style="font-size:13px;color:#626975;margin-bottom:12px">Practice translating word problems into algebraic expressions.</div>
+                    <div style="background:#14bf96;color:#fff;display:inline-block;padding:6px 16px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer">Start exercise</div>
+                  </div>
+                  <div style="background:#f7f8fa;border-radius:8px;padding:20px">
+                    <div style="font-size:16px;font-weight:600;color:#21242c;margin-bottom:8px">📝 Quiz: Foundations</div>
+                    <div style="font-size:13px;color:#626975;margin-bottom:12px">Test your understanding of algebraic foundations. 5 questions.</div>
+                    <div style="background:#1865f2;color:#fff;display:inline-block;padding:6px 16px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer">Start quiz</div>
+                  </div>
+                </div>
+              </div>
+            </div>` },
+
+          // 5. GOOGLE CLASSROOM
+          { title:'Math Period 3 - Google Classroom', favicon:'https://ssl.gstatic.com/classroom/favicon.png', render: () => `
+            <div style="font-family:'Google Sans',Arial,sans-serif;background:#f1f3f4;min-height:100vh">
+              <div style="background:#fff;border-bottom:1px solid #e0e0e0;padding:8px 16px;display:flex;align-items:center;gap:12px">
+                <div style="width:28px;height:28px;background:#34a853;border-radius:4px;display:flex;align-items:center;justify-content:center">
+                  <span style="color:#fff;font-size:16px">📚</span>
+                </div>
+                <span style="font-size:20px;color:#3c4043;font-weight:400">Classroom</span>
+                <div style="margin-left:auto;display:flex;gap:12px;align-items:center;font-size:14px;color:#3c4043">
+                  <span style="cursor:pointer">Stream</span>
+                  <span style="cursor:pointer;color:#1a73e8;border-bottom:2px solid #1a73e8;padding-bottom:2px">Classwork</span>
+                  <span style="cursor:pointer">People</span>
+                  <span style="cursor:pointer">Grades</span>
+                </div>
+              </div>
+              <div style="background:#2e7d32;color:#fff;padding:32px 24px;margin-bottom:0">
+                <div style="font-size:28px;font-weight:400">Math — Period 3</div>
+                <div style="font-size:14px;opacity:.8;margin-top:4px">Mr. Harrison · Room 214</div>
+              </div>
+              <div style="max-width:800px;margin:24px auto;padding:0 16px">
+                <div style="background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.1);margin-bottom:12px;overflow:hidden">
+                  <div style="padding:16px;display:flex;align-items:start;gap:12px">
+                    <div style="width:40px;height:40px;background:#1a73e8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;flex-shrink:0">H</div>
+                    <div style="flex:1">
+                      <div style="font-size:14px;font-weight:500;color:#202124">Mr. Harrison posted a new assignment</div>
+                      <div style="font-size:13px;color:#5f6368;margin-top:2px">Mar 18 · Due Mar 21</div>
+                      <div style="margin-top:10px;padding:12px;background:#f8f9fa;border-radius:4px;border-left:4px solid #1a73e8">
+                        <div style="font-size:14px;font-weight:500;color:#202124">📝 Chapter 7 Review Problems</div>
+                        <div style="font-size:13px;color:#5f6368;margin-top:4px">Complete problems 1–25 on pages 184–186. Show all work.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div style="background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.1);margin-bottom:12px;overflow:hidden">
+                  <div style="padding:16px;display:flex;align-items:start;gap:12px">
+                    <div style="width:40px;height:40px;background:#1a73e8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;flex-shrink:0">H</div>
+                    <div style="flex:1">
+                      <div style="font-size:14px;font-weight:500;color:#202124">Quiz results posted</div>
+                      <div style="font-size:13px;color:#5f6368;margin-top:2px">Mar 15</div>
+                      <div style="font-size:13px;color:#202124;margin-top:8px">Quiz 6 grades are now available. Class average was 84%. Great job everyone — check your individual feedback in the Grades tab.</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.1);overflow:hidden">
+                  <div style="padding:16px;display:flex;align-items:start;gap:12px">
+                    <div style="width:40px;height:40px;background:#1a73e8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;flex-shrink:0">H</div>
+                    <div style="flex:1">
+                      <div style="font-size:14px;font-weight:500;color:#202124">Welcome back from spring break!</div>
+                      <div style="font-size:13px;color:#5f6368;margin-top:2px">Mar 10</div>
+                      <div style="font-size:13px;color:#202124;margin-top:8px">Reminder that we're starting Chapter 8 this week. Please make sure your textbook and calculator are with you every day.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>` },
+
+          // 6. DUOLINGO
+          { title:'French — Duolingo', favicon:'https://d35aaqx5ub95lt.cloudfront.net/favicon.ico', render: () => `
+            <div style="font-family:'Nunito',Arial,sans-serif;background:#fff;min-height:100vh">
+              <div style="background:#fff;border-bottom:2px solid #e5e5e5;padding:12px 24px;display:flex;align-items:center;gap:24px">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <div style="width:32px;height:32px;background:#58cc02;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px">🦉</div>
+                  <span style="font-size:20px;font-weight:800;color:#58cc02">duolingo</span>
+                </div>
+                <div style="display:flex;gap:20px;font-size:14px;font-weight:700;color:#afafaf">
+                  <span style="color:#1cb0f6;border-bottom:2px solid #1cb0f6;padding-bottom:2px;cursor:pointer">LEARN</span>
+                  <span style="cursor:pointer">LEADERBOARDS</span>
+                  <span style="cursor:pointer">QUESTS</span>
+                  <span style="cursor:pointer">SHOP</span>
+                </div>
+                <div style="margin-left:auto;display:flex;gap:16px;align-items:center">
+                  <span style="font-size:14px;font-weight:700;color:#ff9600">🔥 12</span>
+                  <span style="font-size:14px;font-weight:700;color:#1cb0f6">💎 350</span>
+                </div>
+              </div>
+              <div style="display:flex;max-width:900px;margin:0 auto;padding:32px 24px;gap:32px">
+                <div style="flex:1">
+                  <div style="text-align:center;margin-bottom:24px">
+                    <div style="font-size:16px;font-weight:800;color:#3c3c3c;margin-bottom:4px">SECTION 2, UNIT 4</div>
+                    <div style="font-size:20px;font-weight:800;color:#3c3c3c">Talk about your week</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+                    <div style="width:64px;height:64px;background:#58cc02;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 4px 0 #58a700">⭐</div>
+                    <div style="background:#fff;border:2px solid #e5e5e5;border-radius:16px;padding:20px;width:100%;max-width:420px;text-align:center">
+                      <div style="font-size:18px;font-weight:700;color:#3c3c3c;margin-bottom:8px">Lesson 1: Days of the week</div>
+                      <div style="font-size:14px;color:#afafaf;margin-bottom:16px">Learn to say the days of the week in French</div>
+                      <div style="background:#58cc02;color:#fff;padding:12px 32px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;display:inline-block;box-shadow:0 4px 0 #58a700">START</div>
+                    </div>
+                    <div style="background:#f7f7f7;border:2px solid #e5e5e5;border-radius:16px;padding:20px;width:100%;max-width:420px;text-align:center;opacity:.7">
+                      <div style="font-size:18px;font-weight:700;color:#3c3c3c;margin-bottom:4px">Lesson 2: Months</div>
+                      <div style="font-size:14px;color:#afafaf">🔒 Complete lesson 1 to unlock</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="width:200px;flex-shrink:0">
+                  <div style="background:#fff3e0;border:2px solid #ff9600;border-radius:16px;padding:16px;text-align:center;margin-bottom:16px">
+                    <div style="font-size:32px">🔥</div>
+                    <div style="font-size:24px;font-weight:800;color:#ff9600">12</div>
+                    <div style="font-size:13px;font-weight:700;color:#ff9600">Day streak!</div>
+                  </div>
+                  <div style="background:#f7f7f7;border-radius:16px;padding:16px">
+                    <div style="font-size:13px;font-weight:700;color:#afafaf;margin-bottom:8px">DAILY GOAL</div>
+                    <div style="background:#e5e5e5;border-radius:99px;height:8px;overflow:hidden">
+                      <div style="background:#58cc02;width:60%;height:100%;border-radius:99px"></div>
+                    </div>
+                    <div style="font-size:12px;color:#afafaf;margin-top:6px">60 / 100 XP</div>
+                  </div>
+                </div>
+              </div>
+            </div>` },
+
+        ];
+
+        function showCloak() {
+            if (cloaked) return;
+            // Pick a random page and render it
+            const page = CLOAK_PAGES[Math.floor(Math.random() * CLOAK_PAGES.length)];
+            document.title = page.title;
+            // Update favicon
+            let link = document.querySelector("link[rel='icon']");
+            if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+            link.href = page.favicon;
+            // Render content
+            document.getElementById('cloak-inner').innerHTML = page.render();
+            cloak.classList.add('active');
+            cloaked = true;
+        }
+
+        function hideCloak() {
+            cloak.classList.remove('active');
+            cloaked = false;
+            cloakTaps = 0;
+            // Restore title/favicon
+            document.title = 'Photosynthesis - Wikipedia';
+            document.querySelector("link[rel='icon']").href = 'https://en.wikipedia.org/favicon.ico';
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && !cloaked) { e.preventDefault(); showCloak(); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); cloaked ? hideCloak() : showCloak(); }
+        });
+
+        window.addEventListener('blur', showCloak);
+        document.addEventListener('visibilitychange', () => { if (document.hidden) showCloak(); });
+        setInterval(() => { if (!document.hasFocus() && !cloaked) showCloak(); }, 500);
+
+        document.getElementById('wiki-taps').addEventListener('click', () => {
+            cloakTaps++;
+            clearTimeout(cloakTimer);
+            if (cloakTaps >= 5) { hideCloak(); }
+            else { cloakTimer = setTimeout(() => { cloakTaps = 0; }, 3000); }
+        });
+
+        // ── PRESENCE ──────────────────────────────────────────────────────────────
+        const myOnlineRef = ref(db, 'online/' + myUid);
+        const userInp = document.getElementById('username');
+        const savedName = localStorage.getItem('titan_name');
+        if (savedName) userInp.value = savedName;
+
+        let prevName = userInp.value.trim();
+        onValue(ref(db, '.info/connected'), snap => {
+            if (snap.val() === true) {
+                onDisconnect(myOnlineRef).remove();
+                set(myOnlineRef, { name: userInp.value.trim() || 'Guest' });
+            }
+        });
+        userInp.addEventListener('input', () => {
+            const newName = userInp.value.trim() || 'Guest';
+            if (prevName && newName !== prevName) {
+                snitch('✏️', '<b>'+prevName+'</b> changed name to <b>'+newName+'</b>');
+            }
+            prevName = newName;
+            set(myOnlineRef, { name: newName });
+        });
+
+        onValue(onlineRef, snap => {
+            const users = [];
+            snap.forEach(c => { const v = c.val(); users.push({ uid: c.key, name: (v&&v.name)?v.name:'Guest' }); });
+            document.getElementById('online-count').innerText = users.length + ' Online';
+            renderOnlineList(users);
+        });
+        function renderOnlineList(users) {
+            const list = document.getElementById('online-list');
+            list.innerHTML = '';
+            const pal = ['bg-red-500','bg-blue-500','bg-emerald-500','bg-amber-500','bg-violet-500','bg-pink-500','bg-cyan-500'];
+            users.forEach(u => {
+                const isMe = u.uid === myUid;
+                const color = pal[(u.name.charCodeAt(0)||0) % pal.length];
+                const chip = document.createElement('div');
+                chip.className = 'flex items-center gap-1.5 bg-slate-700/60 border border-slate-600/40 px-2.5 py-1 rounded-full cursor-pointer hover:border-purple-500/50 transition-colors';
+                chip.title = 'Click to whisper';
+                chip.innerHTML = '<div class="w-5 h-5 rounded-full '+color+' flex items-center justify-center text-white font-bold mono" style="font-size:9px">'+u.name[0].toUpperCase()+'</div>'+
+                    '<span class="mono text-[10px] text-slate-300 font-semibold">'+u.name+(isMe?' <span class="text-blue-400">(you)</span>':'')+' </span>';
+                if (!isMe) chip.onclick = () => openWhisper(u.name);
+                list.appendChild(chip);
+            });
+        }
+        window.toggleOnlinePanel = () => document.getElementById('online-panel').classList.toggle('hidden');
+
+        // ── SECRET PASSWORD ADMIN UNLOCK ──────────────────────────────────────────
+        const ADMIN_PASS = 'saifs216';
+        const logoEl = document.getElementById('main-logo');
+        window.closeAdmin = () => document.getElementById('admin-panel').classList.remove('active');
+
+        function unlockAdmin() {
+            document.getElementById('admin-panel').classList.add('active');
+            lucide.createIcons();
+            showToast('🔐 Admin panel unlocked', 'blue');
+            // Register this fingerprint as the admin fp (persists)
+            if (myFP) { set(ref(db, 'adminFP'), myFP); isAdmin = true; }
+        }
+
+        // ── WHISPER SYSTEM ────────────────────────────────────────────────────────
+        let whisperResolve = null;
+        function openWhisper(targetName) {
+            document.getElementById('whisper-target-name').textContent = targetName;
+            document.getElementById('whisper-input').value = '';
+            document.getElementById('whisper-modal').classList.add('active');
+            setTimeout(() => document.getElementById('whisper-input').focus(), 80);
+            document.getElementById('whisper-ok').onclick = () => {
+                const txt = document.getElementById('whisper-input').value.trim();
+                if (txt) {
+                    push(msgRef, {
+                        user: userInp.value.trim() || 'Guest',
+                        text: txt,
+                        whisperTo: targetName,
+                        time: serverTimestamp()
+                    });
+                    snitch('🤫', '<b>'+(userInp.value.trim()||'Guest')+'</b> whispered to <b>'+targetName+'</b>');
+                }
+                document.getElementById('whisper-modal').classList.remove('active');
+            };
+            document.getElementById('whisper-cancel').onclick = () => {
+                document.getElementById('whisper-modal').classList.remove('active');
+            };
+            document.getElementById('whisper-input').onkeydown = e => {
+                if (e.key === 'Enter') document.getElementById('whisper-ok').click();
+                if (e.key === 'Escape') document.getElementById('whisper-cancel').click();
+            };
+        }
+
+        // ── CUSTOM PROMPT ─────────────────────────────────────────────────────────
+        let promptResolve = null;
+        function showPrompt(title, placeholder) {
+            return new Promise(resolve => {
+                promptResolve = resolve;
+                document.getElementById('prompt-title').innerText = title || '';
+                const inp = document.getElementById('prompt-input');
+                inp.value = ''; inp.placeholder = placeholder || '';
+                document.getElementById('prompt-modal').classList.add('active');
+                setTimeout(() => inp.focus(), 80);
+                const finish = val => { document.getElementById('prompt-modal').classList.remove('active'); const r = promptResolve; promptResolve = null; r(val); };
+                document.getElementById('prompt-ok').onclick     = () => finish(inp.value.trim() || null);
+                document.getElementById('prompt-cancel').onclick = () => finish(null);
+                inp.onkeydown = e => {
+                    if (e.key === 'Enter')  document.getElementById('prompt-ok').click();
+                    if (e.key === 'Escape') document.getElementById('prompt-cancel').click();
+                };
+            });
+        }
+
+        // ── ADMIN ACTIONS ─────────────────────────────────────────────────────────
+        window.setLock = status => { set(configRef, { locked: status }); showToast(status ? '⚠️ Chat locked' : '✅ Chat unlocked', status ? 'orange' : 'green'); };
+        window.adminAlert = async () => {
+            const txt = await showPrompt('Send a global alert', 'Type your message...');
+            if (txt) { push(msgRef, { user:'SYSTEM', text:txt, isSystem:true, time:serverTimestamp() }); showToast('📢 Alert sent','blue'); }
+        };
+        window.remoteKick = async () => {
+            const n = await showPrompt('Kick user', 'Exact username');
+            if (n) { set(ref(db,'security/kick/'+n), Date.now()); showToast('👟 Kicked: '+n,'slate'); }
+        };
+        window.remoteBan = async () => {
+            const n = await showPrompt('Ban user (fingerprint)', 'Exact username');
+            if (!n) return;
+            const onlineSnap = await new Promise(r => onValue(onlineRef, r, { onlyOnce:true }));
+            let targetUid = null;
+            onlineSnap.forEach(c => { if (c.val()&&c.val().name===n) targetUid = c.key; });
+            if (targetUid) {
+                const fpSnap = await new Promise(r => onValue(ref(db,'fingerprints/'+targetUid), r, { onlyOnce:true }));
+                const fp = fpSnap.val();
+                if (fp) { set(ref(db,'security/fpban/'+fp), { name:n, at:Date.now() }); snitch('🚫','Fingerprint-banned <b>'+n+'</b>'); }
+            }
+            set(ref(db,'security/ban/'+n), true);
+            showToast('🚫 Banned: '+n,'red');
+        };
+        window.remoteUnban = async () => {
+            const n = await showPrompt('Unban user', 'Exact username');
+            if (!n) return;
+            remove(ref(db,'security/ban/'+n));
+            const onlineSnap = await new Promise(r => onValue(onlineRef, r, { onlyOnce:true }));
+            let targetUid = null;
+            onlineSnap.forEach(c => { if (c.val()&&c.val().name===n) targetUid = c.key; });
+            if (targetUid) {
+                const fpSnap = await new Promise(r => onValue(ref(db,'fingerprints/'+targetUid), r, { onlyOnce:true }));
+                const fp = fpSnap.val();
+                if (fp) remove(ref(db,'security/fpban/'+fp));
+            }
+            snitch('✅','Unbanned <b>'+n+'</b>');
+            showToast('✅ Unbanned: '+n,'green');
+        };
+        window.remoteMute   = async () => { const n = await showPrompt('Mute user','Exact username'); if (n) { set(ref(db,'security/mute/'+n),true); snitch('🔇','Muted <b>'+n+'</b>'); showToast('🔇 Muted: '+n,'yellow'); } };
+        window.remoteUnmute = async () => { const n = await showPrompt('Unmute user','Exact username'); if (n) { remove(ref(db,'security/mute/'+n)); snitch('🔊','Unmuted <b>'+n+'</b>'); showToast('🔊 Unmuted: '+n,'green'); } };
+        window.forceReload  = () => { set(reloadRef,{at:Date.now()}); showToast('🔄 Reload sent','purple'); };
+        onValue(reloadRef, snap => { const d=snap.val(); if (d&&d.at&&d.at>joinTime) { showToast('🔄 Reloading…','purple'); setTimeout(()=>location.reload(),1500); } });
+
+        // ── BAN / KICK / MUTE WATCH ───────────────────────────────────────────────
+        onValue(securityRef, snap => {
+            const data   = snap.val();
+            const myName = userInp.value.trim();
+            if (myName && data && data.ban && data.ban[myName]) {
+                document.getElementById('ban-screen').style.display = 'flex';
+                document.getElementById('body').style.display = 'none';
+            } else if (document.getElementById('ban-screen').style.display !== 'flex') {
+                document.getElementById('body').style.display = 'flex';
+            }
+            if (myName && data && data.kick && data.kick[myName]) { set(ref(db,'security/kick/'+myName),null); location.reload(); }
+            window._muted = !!(myName && data && data.mute && data.mute[myName]);
+        });
+
+        // ── LOCK ──────────────────────────────────────────────────────────────────
+        const msgInp = document.getElementById('msg');
+        onValue(configRef, s => {
+            const locked = s.val()&&s.val().locked;
+            msgInp.disabled = !!locked;
+            msgInp.placeholder = locked ? '⚠️ Chat locked by admin' : 'Message, /cmd, or paste image...';
+        });
+
+        // ── SEEN ──────────────────────────────────────────────────────────────────
+        onValue(lastMsgRef, s => {
+            const data = s.val() || {};
+            // Filter out own uid entry, not by name (name may be empty on load)
+            const names = Object.entries(data)
+                .filter(([uid, name]) => uid !== myUid)
+                .map(([uid, name]) => name);
+            const unique = [...new Set(names)].filter(Boolean);
+            document.getElementById('seen-row').innerText = unique.length ? 'Seen by ' + unique.join(', ') : '';
+        });
+        function updateSeen() {
+            // Only mark seen if the tab is actually focused and visible
+            if (!document.hasFocus() || document.hidden) return;
+            set(ref(db,'lastMessageSeen/'+myUid), userInp.value||'Guest');
+        }
+        // Clear seen status when user leaves/blurs so stale names disappear
+        window.addEventListener('blur', () => remove(ref(db,'lastMessageSeen/'+myUid)));
+        document.addEventListener('visibilitychange', () => { if (document.hidden) remove(ref(db,'lastMessageSeen/'+myUid)); });
+
+        // ── MEDIA ─────────────────────────────────────────────────────────────────
+        function handleMedia(file) {
+            if (!file) return;
+            if (file.size > 1.5*1024*1024) { alert('Max 1.5 MB'); return; }
+            const reader = new FileReader();
+            reader.onload = e => {
+                const name = userInp.value||'Guest';
+                push(msgRef,{user:name,text:e.target.result,isImage:true,time:serverTimestamp()});
+                snitch('📷','<b>'+name+'</b> uploaded an image');
+                document.getElementById('file-input').value=''; updateSeen();
+            };
+            reader.readAsDataURL(file);
+        }
+        document.getElementById('file-input').onchange = e => handleMedia(e.target.files[0]);
+        msgInp.onpaste = e => {
+            const items = (e.clipboardData||e.originalEvent.clipboardData).items;
+            for (let i in items) { if (items[i].kind==='file') { e.preventDefault(); handleMedia(items[i].getAsFile()); return; } }
+        };
+
+        // ── TYPING ────────────────────────────────────────────────────────────────
+        msgInp.oninput = () => {
+            set(ref(db,'typing/'+myUid),{name:userInp.value||'Guest',active:true});
+            clearTimeout(window.tOut);
+            window.tOut = setTimeout(()=>set(ref(db,'typing/'+myUid),null),2000);
+        };
+        onValue(typingRef, s => {
+            const typers=[]; s.forEach(c=>{if(c.key!==myUid)typers.push(c.val().name);});
+            const el=document.getElementById('typing-indicator');
+            el.innerText=typers.length?typers.join(', ')+' typing...':'';
+            el.style.opacity=typers.length?'1':'0';
+        });
+        onDisconnect(ref(db,'typing/'+myUid)).remove();
+        onDisconnect(ref(db,'lastMessageSeen/'+myUid)).remove();
+        // Also clear seen immediately on blur/hide so it's not stale
+        window.addEventListener('blur', () => { try { remove(ref(db,'lastMessageSeen/'+myUid)); } catch(e){} });
+
+        // ── TOASTS ────────────────────────────────────────────────────────────────
+        const TC={blue:'bg-blue-900 text-blue-200 border-blue-700',red:'bg-red-900 text-red-200 border-red-700',green:'bg-green-900 text-green-200 border-green-700',orange:'bg-orange-900 text-orange-200 border-orange-700',purple:'bg-purple-900 text-purple-200 border-purple-700',slate:'bg-slate-700 text-slate-200 border-slate-600',yellow:'bg-yellow-900 text-yellow-200 border-yellow-700'};
+        function showToast(text,color){
+            const t=document.createElement('div');
+            t.className='toast-notify border '+(TC[color]||TC.blue)+' px-5 py-2 rounded-full shadow-2xl mono text-xs font-bold';
+            t.innerText=text; document.getElementById('toast-container').appendChild(t);
+            setTimeout(()=>t.remove(),3000);
+        }
+
+        // ── ALERTS ────────────────────────────────────────────────────────────────
+        function doAlert(user,text,isImg){
+            logoEl.classList.remove('flash'); void logoEl.offsetWidth; logoEl.classList.add('flash');
+            document.getElementById('ding').play().catch(()=>{});
+            showToast(user+': '+(isImg?'📷 image':text.substring(0,30)),'blue');
+            if(notifOn&&Notification.permission==='granted') new Notification('TITAN: '+user,{body:isImg?'Sent an image':text.substring(0,60)});
+        }
+
+        // ── THEME ─────────────────────────────────────────────────────────────────
+        window.toggleTheme=()=>{
+            isDark=!isDark;
+            const b=document.getElementById('body'),h=document.getElementById('header'),f=document.getElementById('footer');
+            if(!isDark){b.className='bg-slate-100 h-screen flex flex-col text-slate-900 overflow-hidden';h.className='bg-white px-4 py-3 border-b border-slate-200 flex justify-between items-center z-40 shrink-0';f.className='p-3 bg-white border-t border-slate-200 z-40 shrink-0';[userInp,msgInp].forEach(i=>{i.style.background='#e2e8f0';i.style.color='#0f172a';});document.getElementById('theme-icon').innerText='☀️';}
+            else{b.className='bg-slate-900 h-screen flex flex-col text-white overflow-hidden';h.className='bg-slate-800 px-4 py-3 border-b border-slate-700 flex justify-between items-center z-40 shrink-0';f.className='p-3 bg-slate-800 border-t border-slate-700 z-40 shrink-0';[userInp,msgInp].forEach(i=>{i.style.background='';i.style.color='';});document.getElementById('theme-icon').innerText='🌙';}
+        };
+
+        // ── LINK DETECTION ────────────────────────────────────────────────────────
+        const URL_RE=/https?:\/\/[^\s<>"']+/g;
+        function linkify(text){
+            const frag=document.createDocumentFragment();let last=0,match;URL_RE.lastIndex=0;
+            while((match=URL_RE.exec(text))!==null){
+                if(match.index>last)frag.appendChild(document.createTextNode(text.slice(last,match.index)));
+                const a=document.createElement('a');a.href=match[0];a.target='_blank';a.rel='noopener noreferrer';
+                a.textContent=match[0];a.className='text-blue-400 underline break-all hover:text-blue-300 transition-colors';
+                frag.appendChild(a);last=URL_RE.lastIndex;
+            }
+            if(last<text.length)frag.appendChild(document.createTextNode(text.slice(last)));
+            return frag;
+        }
+        function hasUrl(t){URL_RE.lastIndex=0;return URL_RE.test(t);}
+        function firstUrl(t){URL_RE.lastIndex=0;const m=URL_RE.exec(t);return m?m[0]:null;}
+
+        // ── IGNORE ────────────────────────────────────────────────────────────────
+        window.toggleIgnore = user => {
+            const wasIgnored = ignoredUsers.has(user);
+            if (wasIgnored) { ignoredUsers.delete(user); showToast('👁 Unignored: '+user,'slate'); }
+            else            { ignoredUsers.add(user);    showToast('🙈 Ignored: '+user,'slate'); }
+            const nowIgnored = !wasIgnored;
+            document.querySelectorAll('[data-sender="'+user+'"]').forEach(el => {
+                const content = el.querySelector('.msg-content');
+                const label   = el.querySelector('.msg-ignored-label');
+                const uname   = el.querySelector('.msg-uname');
+                const ignBtn  = el.querySelector('.ign-btn');
+                if (content) content.style.display  = nowIgnored ? 'none' : '';
+                if (label)   label.style.display    = nowIgnored ? 'block' : 'none';
+                if (uname)   uname.className = 'msg-uname mono text-xs font-bold uppercase tracking-wide ' + (nowIgnored ? 'text-slate-600' : 'text-blue-400');
+                if (ignBtn)  ignBtn.textContent     = nowIgnored ? '👁 Unignore' : '🙈 Ignore';
+            });
+        };
+
+        // ── MESSAGE PRUNING (keep last 100) ───────────────────────────────────────
+        async function pruneMessages() {
+            const snap = await new Promise(r => onValue(msgRef, r, { onlyOnce:true }));
+            const keys = [];
+            snap.forEach(c => keys.push(c.key));
+            if (keys.length > 100) {
+                const toDelete = keys.slice(0, keys.length - 100);
+                toDelete.forEach(k => remove(ref(db, 'messages/' + k)));
+            }
+        }
+
+        // ── CORE / SEND ───────────────────────────────────────────────────────────
+        window.send = () => {
+            const text = msgInp.value.trim();
+            if (!text) return;
+
+            // Admin password unlock
+            if (text === ADMIN_PASS) {
+                msgInp.value = '';
+                unlockAdmin();
+                return;
+            }
+
+            // Slash commands — only work if this device is the registered admin fp
+            if (text.startsWith('/')) {
+                if (!isAdmin) {
+                    snitch('🚨', '<b>'+myName()+'</b> tried slash command: '+text);
+                    showToast('⛔ Unknown command','red');
+                    msgInp.value = '';
+                    return;
+                }
+                msgInp.value = '';
+                const args = text.split(' ');
+                const cmd = args[0].toLowerCase();
+                const target = args.slice(1).join(' ');
+
+                if (cmd === '/wipe')      { clearChat(); return; }
+                if (cmd === '/lock')      { setLock(true); return; }
+                if (cmd === '/unlock')    { setLock(false); return; }
+                if (cmd === '/cloak')     { showCloak(); return; }
+                if (cmd === '/alert')     { adminAlert(); return; }
+                if (cmd === '/refresh')   { forceReload(); return; }
+                if (cmd === '/logs')      { document.getElementById('admin-panel').classList.add('active'); lucide.createIcons(); showToast('📂 Logs open','blue'); return; }
+                if (cmd === '/clearlogs') { set(ref(db,'snitchLog'),null); document.getElementById('snitch-log').innerHTML=''; showToast('🧹 Logs cleared','slate'); return; }
+                if (target) {
+                    if (cmd === '/kick')   { set(ref(db,'security/kick/'+target), Date.now()); snitch('👟','Kicked <b>'+target+'</b> via slash cmd'); showToast('👟 Kicked: '+target,'slate'); return; }
+                    if (cmd === '/ban')    { remoteBan_named(target); return; }
+                    if (cmd === '/unban')  { remoteUnban_named(target); return; }
+                    if (cmd === '/mute')   { set(ref(db,'security/mute/'+target),true); snitch('🔇','Muted <b>'+target+'</b> via slash cmd'); showToast('🔇 Muted: '+target,'yellow'); return; }
+                    if (cmd === '/unmute') { remove(ref(db,'security/mute/'+target)); snitch('🔊','Unmuted <b>'+target+'</b> via slash cmd'); showToast('🔊 Unmuted: '+target,'green'); return; }
+                }
+                showToast('/wipe /lock /unlock /cloak /alert /refresh /logs /clearlogs /kick /ban /mute [name]','slate');
+                return;
+            }
+
+            if (msgInp.disabled || window._muted) {
+                if (window._muted) showToast('🔇 You are muted','yellow');
+                return;
+            }
+
+            push(msgRef, { user: userInp.value.trim()||'Guest', text, reply: replyData, time: serverTimestamp() });
+            msgInp.value = ''; cancelReply(); updateSeen();
+
+            // Prune after sending
+            pruneMessages();
+        };
+
+        // Slash command helpers — ban/unban by name without prompt
+        async function remoteBan_named(n) {
+            const onlineSnap = await new Promise(r => onValue(onlineRef, r, { onlyOnce:true }));
+            let targetUid = null;
+            onlineSnap.forEach(c => { if (c.val()&&c.val().name===n) targetUid = c.key; });
+            if (targetUid) {
+                const fpSnap = await new Promise(r => onValue(ref(db,'fingerprints/'+targetUid), r, { onlyOnce:true }));
+                const fp = fpSnap.val();
+                if (fp) { set(ref(db,'security/fpban/'+fp), { name:n, at:Date.now() }); snitch('🚫','FP-banned <b>'+n+'</b> via slash cmd'); }
+            }
+            set(ref(db,'security/ban/'+n), true);
+            showToast('🚫 Banned: '+n,'red');
+        }
+        async function remoteUnban_named(n) {
+            remove(ref(db,'security/ban/'+n));
+            const onlineSnap = await new Promise(r => onValue(onlineRef, r, { onlyOnce:true }));
+            let targetUid = null;
+            onlineSnap.forEach(c => { if (c.val()&&c.val().name===n) targetUid = c.key; });
+            if (targetUid) {
+                const fpSnap = await new Promise(r => onValue(ref(db,'fingerprints/'+targetUid), r, { onlyOnce:true }));
+                const fp = fpSnap.val();
+                if (fp) remove(ref(db,'security/fpban/'+fp));
+            }
+            snitch('✅','Unbanned <b>'+n+'</b> via slash cmd');
+            showToast('✅ Unbanned: '+n,'green');
+        }
+
+        window.startReply=(user,text)=>{replyData={u:user,t:text.substring(0,30)+(text.length>30?'...':'')};document.getElementById('reply-bar').classList.remove('hidden');document.getElementById('reply-user').innerText=user;msgInp.focus();};
+        window.cancelReply=()=>{replyData=null;document.getElementById('reply-bar').classList.add('hidden');};
+        window.clearChat=()=>{if(confirm('Wipe all messages?')){remove(msgRef);remove(lastMsgRef);}};
+        window.deleteMsg=key=>{if(confirm('Delete this message?'))remove(ref(db,'messages/'+key));};
+        window.toggleNotifications=()=>{if(!notifOn){Notification.requestPermission().then(p=>{if(p==='granted'){notifOn=true;document.getElementById('notif-btn').innerText='🔔';}});}else{notifOn=false;document.getElementById('notif-btn').innerText='🔇';}};
+
+        // ── RENDER ────────────────────────────────────────────────────────────────
+        const start = Date.now();
+        const myName = () => userInp.value.trim() || 'Guest';
+
+        onChildAdded(q, snap => {
+            const data = snap.val();
+            // Whisper filtering — only show if it's to me or from me
+            if (data.whisperTo && data.whisperTo !== myName() && data.user !== myName()) return;
+            render(data, snap.key);
+            // Only mark seen for messages that arrived AFTER we loaded (not history)
+            const isNew = data.time && data.time > (Date.now() - 3000);
+            if (data.time > start - 1000) { doAlert(data.user, data.text, data.isImage); }
+            if (isNew) updateSeen();
+        });
+        onChildRemoved(msgRef, snap => { const el = document.getElementById(snap.key); if (el) el.remove(); });
+
+        function render(data, key) {
+            if (document.getElementById(key)) return;
+            const box = document.getElementById('chatbox');
+            const isSys = data.isSystem || data.user === 'SYSTEM';
+            const div = document.createElement('div'); div.id = key;
+
+            if (isSys) {
+                div.className = 'flex justify-center my-1';
+                const inner = document.createElement('div');
+                inner.className = 'bg-blue-600/15 border border-blue-500/40 text-blue-400 px-6 py-1.5 rounded-full mono text-[10px] font-bold uppercase tracking-widest';
+                inner.textContent = '⚡ ' + data.text; div.appendChild(inner);
+            } else {
+                const isWhisper = !!data.whisperTo;
+                const isImg = data.isImage||(typeof data.text==='string'&&/^data:image\/|(\.(jpeg|jpg|gif|png|webp))$/i.test(data.text));
+                const time = data.time ? new Date(data.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '...';
+                const pal = ['bg-red-500','bg-blue-500','bg-emerald-500','bg-amber-500','bg-violet-500','bg-pink-500','bg-cyan-500'];
+                const color = pal[(data.user.charCodeAt(0)||0) % pal.length];
+                let bubbleCls = isDark ? 'bg-slate-800 text-white border-slate-700/60' : 'bg-white text-slate-800 border-slate-200 shadow-sm';
+                const isMyMsg = data.user === myName();
+                const isIgnored = ignoredUsers.has(data.user);
+
+                div.className = 'flex items-start gap-3';
+                div.setAttribute('data-sender', data.user);
+                div.setAttribute('data-msg-key', key);
+
+                const avatar = document.createElement('div');
+                avatar.className = 'w-8 h-8 rounded-full '+color+' shrink-0 flex items-center justify-center text-white font-bold text-xs shadow mt-1 cursor-pointer';
+                avatar.textContent = data.user[0].toUpperCase();
+                if (!isMyMsg) avatar.onclick = () => openWhisper(data.user);
+                avatar.title = isMyMsg ? '' : 'Whisper to ' + data.user;
+
+                const wrap = document.createElement('div'); wrap.className = 'flex-1 min-w-0 msg-wrap';
+
+                const hrow = document.createElement('div'); hrow.className = 'flex items-center gap-2 mb-1';
+                const uname = document.createElement('span');
+                uname.className = 'msg-uname mono text-xs font-bold uppercase tracking-wide ' + (isIgnored ? 'text-slate-600' : (isWhisper ? 'text-purple-400' : 'text-blue-400'));
+                uname.textContent = data.user;
+                const ts = document.createElement('span'); ts.className = 'mono text-[9px] text-slate-500'; ts.textContent = time;
+                hrow.appendChild(uname); hrow.appendChild(ts);
+
+                const bubble = document.createElement('div');
+                bubble.className = bubbleCls + ' px-3 py-2.5 rounded-2xl rounded-tl-none border inline-block max-w-full' + (isWhisper ? ' whisper-bubble' : '');
+
+                // Whisper tag
+                if (isWhisper) {
+                    const wtag = document.createElement('div');
+                    wtag.className = 'whisper-tag';
+                    wtag.textContent = '🤫 whisper → ' + data.whisperTo;
+                    bubble.appendChild(wtag);
+                }
+
+                if (data.reply) {
+                    const rq = document.createElement('div');
+                    rq.className = 'border-l-2 border-blue-400/50 pl-2 mb-2 text-[10px] italic mono text-slate-400';
+                    rq.textContent = '↩ ' + data.reply.u + ': ' + data.reply.t;
+                    bubble.appendChild(rq);
+                }
+
+                const contentWrap = document.createElement('div'); contentWrap.className = 'msg-content';
+                if (isIgnored) contentWrap.style.display = 'none';
+
+                if (isImg) {
+                    const img = document.createElement('img');
+                    img.src = data.text; img.className = 'max-w-full rounded-lg max-h-64 object-contain cursor-pointer block';
+                    img.onclick = () => window.open(img.src); contentWrap.appendChild(img);
+                } else if (hasUrl(data.text)) {
+                    const p = document.createElement('p'); p.className = 'text-sm break-words leading-relaxed';
+                    p.appendChild(linkify(data.text)); contentWrap.appendChild(p);
+                    const url = firstUrl(data.text);
+                    if (url) { const prev = document.createElement('div'); prev.className = 'link-preview'; prev.innerHTML = '<div class="link-preview-bar">🔗 '+url+'</div>'; contentWrap.appendChild(prev); }
+                } else {
+                    const p = document.createElement('p'); p.className = 'text-sm break-words leading-relaxed';
+                    p.textContent = data.text; contentWrap.appendChild(p);
+                }
+                bubble.appendChild(contentWrap);
+
+                const ignoredLabel = document.createElement('div');
+                ignoredLabel.className = 'msg-ignored-label';
+                ignoredLabel.textContent = '[ message ignored ]';
+                ignoredLabel.style.display = isIgnored ? 'block' : 'none';
+                bubble.appendChild(ignoredLabel);
+
+                // Reaction bar (populated live by onValue listener)
+                const reactionBar = document.createElement('div');
+                reactionBar.className = 'reaction-bar';
+                wrap.appendChild(reactionBar);
+
+                const actions = document.createElement('div'); actions.className = 'msg-actions';
+
+                const reactBtn = document.createElement('button');
+                reactBtn.className = 'react-btn';
+                reactBtn.textContent = '＋ React';
+                reactBtn.onclick = e => { e.stopPropagation(); openReactPopup(key, reactBtn); };
+                actions.appendChild(reactBtn);
+
+                const replyBtn = document.createElement('button');
+                replyBtn.className = 'bg-slate-700/80 hover:bg-blue-600 text-slate-400 hover:text-white px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all border border-slate-600/40 hover:border-blue-500';
+                replyBtn.textContent = '↩ Reply'; replyBtn.onclick = () => startReply(data.user, isImg ? '[image]' : data.text);
+                actions.appendChild(replyBtn);
+
+                if (isMyMsg) {
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'bg-slate-700/80 hover:bg-red-600 text-slate-400 hover:text-white px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all border border-slate-600/40 hover:border-red-500';
+                    delBtn.textContent = '✕ Delete'; delBtn.onclick = () => deleteMsg(key);
+                    actions.appendChild(delBtn);
+                }
+
+                if (!isMyMsg) {
+                    const whisperBtn = document.createElement('button');
+                    whisperBtn.className = 'bg-slate-700/80 hover:bg-purple-700 text-slate-400 hover:text-white px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all border border-slate-600/40 hover:border-purple-500';
+                    whisperBtn.textContent = '🤫 Whisper'; whisperBtn.onclick = () => openWhisper(data.user);
+                    actions.appendChild(whisperBtn);
+
+                    const ignBtn = document.createElement('button');
+                    ignBtn.className = 'ign-btn bg-slate-700/80 hover:bg-yellow-700 text-slate-400 hover:text-white px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all border border-slate-600/40 hover:border-yellow-500';
+                    ignBtn.textContent = isIgnored ? '👁 Unignore' : '🙈 Ignore';
+                    ignBtn.onclick = () => toggleIgnore(data.user);
+                    actions.appendChild(ignBtn);
+                }
+
+                wrap.appendChild(hrow); wrap.appendChild(bubble); wrap.appendChild(actions);
+                div.appendChild(avatar); div.appendChild(wrap);
+            }
+            box.appendChild(div); box.scrollTop = box.scrollHeight;
+        }
+
+        msgInp.addEventListener('keypress', e => { if (e.key === 'Enter') send(); });
+
+        // ── REACTIONS ─────────────────────────────────────────────────────────────
+        const QUICK_REACTS = ['👍','❤️','😂','😮','😢','🔥','💯','😎','👏','🥰','💀','🤣'];
+
+        // Listen to all reactions and update UI live
+        onValue(reactionsRef, snap => {
+            const all = snap.val() || {};
+            // For each message that has reactions, rebuild its reaction bar
+            const byMsg = {};
+            Object.entries(all).forEach(([rKey, r]) => {
+                if (!r) return;
+                if (!byMsg[r.msgKey]) byMsg[r.msgKey] = {};
+                if (!byMsg[r.msgKey][r.emoji]) byMsg[r.msgKey][r.emoji] = [];
+                byMsg[r.msgKey][r.emoji].push({ uid: r.uid, rKey });
+            });
+
+            // Update every rendered message's reaction bar
+            document.querySelectorAll('[data-msg-key]').forEach(el => {
+                const msgKey = el.getAttribute('data-msg-key');
+                const bar = el.querySelector('.reaction-bar');
+                if (!bar) return;
+                const emojiData = byMsg[msgKey] || {};
+                buildReactionBar(bar, msgKey, emojiData);
+            });
+        });
+
+        function buildReactionBar(bar, msgKey, emojiData) {
+            bar.innerHTML = '';
+            Object.entries(emojiData).forEach(([emoji, reactors]) => {
+                if (!reactors.length) return;
+                const myReaction = reactors.find(r => r.uid === myUid);
+                const pill = document.createElement('div');
+                pill.className = 'reaction-pill' + (myReaction ? ' mine' : '');
+                pill.innerHTML = '<span>' + emoji + '</span><span class="r-count">' + reactors.length + '</span>';
+                pill.title = reactors.map(r => r.uid === myUid ? 'You' : '?').join(', ');
+                pill.onclick = () => {
+                    if (myReaction) {
+                        // Toggle off
+                        remove(ref(db, 'reactions/' + myReaction.rKey));
+                    } else {
+                        // Add reaction
+                        push(reactionsRef, { msgKey, emoji, uid: myUid, at: Date.now() });
+                    }
+                };
+                bar.appendChild(pill);
+            });
+        }
+
+        let reactPopupTarget = null;
+        window.openReactPopup = (msgKey, anchorEl) => {
+            const popup = document.getElementById('react-popup');
+            // If already open for same message, close it
+            if (popup.classList.contains('active') && reactPopupTarget === msgKey) {
+                popup.classList.remove('active'); reactPopupTarget = null; return;
+            }
+            reactPopupTarget = msgKey;
+            popup.innerHTML = '';
+            QUICK_REACTS.forEach(em => {
+                const btn = document.createElement('div');
+                btn.className = 'react-pick';
+                btn.textContent = em;
+                btn.onclick = e => {
+                    e.stopPropagation();
+                    push(reactionsRef, { msgKey, emoji: em, uid: myUid, at: Date.now() });
+                    popup.classList.remove('active'); reactPopupTarget = null;
+                };
+                popup.appendChild(btn);
+            });
+            // Position near the button
+            const rect = anchorEl.getBoundingClientRect();
+            popup.style.left = Math.min(rect.left, window.innerWidth - 240) + 'px';
+            popup.style.top = (rect.top - 10 - 60) + 'px';
+            popup.classList.add('active');
+        };
+
+        document.addEventListener('click', e => {
+            const popup = document.getElementById('react-popup');
+            if (!popup.contains(e.target) && !e.target.classList.contains('react-btn')) {
+                popup.classList.remove('active'); reactPopupTarget = null;
+            }
+        });
+
+        // ── EMOJI PICKER ──────────────────────────────────────────────────────────
+        // ── EMOJI DATA — name:emoji pairs for searchable picker ─────────────────
+        const EMOJI_DATA = [
+          // Smileys & emotion
+          ['grinning','😀'],['beaming','😁'],['joy','😂'],['rofl','🤣'],['smile','😃'],
+          ['grin','😄'],['sweat smile','😅'],['laughing','😆'],['wink','😉'],['blush','😊'],
+          ['yum','😋'],['sunglasses cool','😎'],['heart eyes','😍'],['smiling hearts','🥰'],
+          ['kissing heart','😘'],['kissing','😗'],['kissing smiling','😙'],['kissing closed','😚'],
+          ['slightly smiling','🙂'],['hugging','🤗'],['star struck','🤩'],['thinking','🤔'],
+          ['raised eyebrow','🤨'],['neutral','😐'],['expressionless','😑'],['no mouth','😶'],
+          ['eye roll','🙄'],['smirk','😏'],['persevering','😣'],['sad relieved','😥'],
+          ['open mouth','😮'],['zipper mouth','🤐'],['hushed','😯'],['sleepy','😪'],
+          ['tired','😫'],['yawning','🥱'],['sleeping','😴'],['relieved','😌'],
+          ['tongue out','😛'],['winking tongue','😜'],['squinting tongue','😝'],['drooling','🤤'],
+          ['unamused','😒'],['downcast sweat','😓'],['pensive','😔'],['confused','😕'],
+          ['upside down','🙃'],['money mouth','🤑'],['astonished','😲'],['mask','😷'],
+          ['sick','🤒'],['injured','🤕'],['nauseated','🤢'],['vomiting','🤮'],['sneezing','🤧'],
+          ['hot','🥵'],['cold','🥶'],['woozy','🥴'],['dizzy','😵'],['exploding head','🤯'],
+          ['cowboy','🤠'],['partying','🥳'],['disguised','🥸'],['nerd','🤓'],['monocle','🧐'],
+          ['devil','😈'],['angry devil','👿'],['ogre','👹'],['goblin','👺'],['skull','💀'],
+          ['skull crossbones','☠️'],['ghost','👻'],['alien','👽'],['robot','🤖'],['clown','🤡'],
+          ['poop','💩'],['crying','😢'],['sob','😭'],['angry','😠'],['rage','😡'],
+          ['triumph','😤'],['anguished','😧'],['fearful','😨'],['anxious','😰'],['scream','😱'],
+          ['flushed','😳'],['pleading','🥺'],['worried','😟'],['frowning','☹️'],['disappointed','😞'],
+          // Gestures & body
+          ['wave','👋'],['raised back hand','🤚'],['raised hand','🖐'],['hand','✋'],
+          ['vulcan','🖖'],['ok hand','👌'],['pinched fingers','🤌'],['pinching','🤏'],
+          ['peace','✌️'],['crossed fingers','🤞'],['love you','🤟'],['horns','🤘'],
+          ['call me','🤙'],['point left','👈'],['point right','👉'],['point up','👆'],
+          ['middle finger','🖕'],['point down','👇'],['index up','☝️'],['thumbs up','👍'],
+          ['thumbs down','👎'],['fist','✊'],['oncoming fist','👊'],['left fist','🤛'],
+          ['right fist','🤜'],['clap','👏'],['raised hands','🙌'],['heart hands','🫶'],
+          ['open hands','👐'],['palms up','🤲'],['pray','🙏'],['writing','✍️'],
+          ['nail care','💅'],['selfie','🤳'],['muscle','💪'],['leg','🦵'],['foot','🦶'],
+          ['ear','👂'],['nose','👃'],['brain','🧠'],['eyes','👀'],['eye','👁️'],['tongue','👅'],
+          ['lips','👄'],['tooth','🦷'],['bone','🦴'],
+          // Hearts & love
+          ['red heart','❤️'],['orange heart','🧡'],['yellow heart','💛'],['green heart','💚'],
+          ['blue heart','💙'],['purple heart','💜'],['black heart','🖤'],['white heart','🤍'],
+          ['brown heart','🤎'],['broken heart','💔'],['exclamation heart','❣️'],
+          ['two hearts','💕'],['revolving hearts','💞'],['beating heart','💓'],['growing heart','💗'],
+          ['sparkling heart','💖'],['arrow heart','💘'],['ribbon heart','💝'],['heart decoration','💟'],
+          ['kiss','💋'],['100','💯'],['fire','🔥'],['rainbow','🌈'],['sparkles','✨'],['star','⭐'],
+          ['glowing star','🌟'],['dizzy star','💫'],['boom','💥'],
+          // Animals
+          ['dog','🐶'],['cat','🐱'],['mouse','🐭'],['hamster','🐹'],['rabbit','🐰'],
+          ['fox','🦊'],['bear','🐻'],['panda','🐼'],['koala','🐨'],['tiger','🐯'],
+          ['lion','🦁'],['cow','🐮'],['pig','🐷'],['frog','🐸'],['monkey','🐵'],
+          ['see no evil','🙈'],['hear no evil','🙉'],['speak no evil','🙊'],['chicken','🐔'],
+          ['penguin','🐧'],['bird','🐦'],['baby chick','🐤'],['duck','🦆'],['eagle','🦅'],
+          ['owl','🦉'],['bat','🦇'],['wolf','🐺'],['boar','🐗'],['horse','🐴'],['unicorn','🦄'],
+          ['bee','🐝'],['caterpillar','🐛'],['butterfly','🦋'],['snail','🐌'],['ladybug','🐞'],
+          ['ant','🐜'],['mosquito','🦟'],['cricket','🦗'],['scorpion','🦂'],['turtle','🐢'],
+          ['snake','🐍'],['lizard','🦎'],['t-rex','🦖'],['sauropod','🦕'],['octopus','🐙'],
+          ['crab','🦀'],['lobster','🦞'],['shrimp','🦐'],['squid','🦑'],['fish','🐟'],
+          ['tropical fish','🐠'],['blowfish','🐡'],['shark','🦈'],['whale','🐳'],['dolphin','🐬'],
+          ['seal','🦭'],['crocodile','🐊'],['elephant','🐘'],['hippo','🦛'],['rhino','🦏'],
+          ['giraffe','🦒'],['zebra','🦓'],['gorilla','🦍'],['orangutan','🦧'],['parrot','🦜'],
+          ['flamingo','🦩'],['peacock','🦚'],['hedgehog','🦔'],['sloth','🦥'],['otter','🦦'],
+          ['skunk','🦨'],['kangaroo','🦘'],['badger','🦡'],['deer','🦌'],['turkey','🦃'],
+          ['llama','🦙'],['camel','🐫'],['poodle','🐩'],['dragon','🐉'],['dinosaur','🦕'],
+          // Food & drink
+          ['apple','🍎'],['orange fruit','🍊'],['lemon','🍋'],['grapes','🍇'],['strawberry','🍓'],
+          ['blueberries','🫐'],['melon','🍈'],['cherry','🍒'],['peach','🍑'],['mango','🥭'],
+          ['pineapple','🍍'],['coconut','🥥'],['kiwi','🥝'],['tomato','🍅'],['avocado','🥑'],
+          ['eggplant','🍆'],['broccoli','🥦'],['carrot','🥕'],['corn','🌽'],['hot pepper','🌶️'],
+          ['cucumber','🥒'],['lettuce','🥬'],['garlic','🧄'],['onion','🧅'],['potato','🥔'],
+          ['pizza','🍕'],['burger','🍔'],['fries','🍟'],['hotdog','🌭'],['popcorn','🍿'],
+          ['salt','🧂'],['bacon','🥓'],['egg','🥚'],['fried egg','🍳'],['butter','🧈'],
+          ['pancakes','🥞'],['waffle','🧇'],['cheese','🧀'],['salad','🥗'],['ramen','🍜'],
+          ['spaghetti','🍝'],['curry','🍛'],['sushi','🍣'],['bento','🍱'],['dumpling','🥟'],
+          ['oyster','🦪'],['shrimp food','🍤'],['rice ball','🍙'],['rice','🍚'],['cake','🎂'],
+          ['cupcake','🧁'],['pie','🥧'],['cookie','🍪'],['chocolate','🍫'],['candy','🍬'],
+          ['lollipop','🍭'],['honey','🍯'],['ice cream','🍦'],['soft ice cream','🍨'],['donut','🍩'],
+          ['coffee','☕'],['tea','🍵'],['boba','🧋'],['juice','🧃'],['water','💧'],
+          ['wine','🍷'],['cocktail','🍸'],['beer','🍺'],['champagne','🍾'],['sake','🍶'],
+          ['taco','🌮'],['burrito','🌯'],['sandwich','🥪'],['croissant','🥐'],['bread','🍞'],
+          ['baguette','🥖'],['pretzel','🥨'],['bagel','🥯'],['falafel','🧆'],
+          // Activities & sports
+          ['soccer','⚽'],['basketball','🏀'],['football','🏈'],['baseball','⚾'],
+          ['softball','🥎'],['tennis','🎾'],['volleyball','🏐'],['rugby','🏉'],
+          ['frisbee','🥏'],['billiards','🎱'],['yo-yo','🪀'],['ping pong','🏓'],
+          ['badminton','🏸'],['hockey','🏒'],['boxing','🥊'],['martial arts','🥋'],
+          ['goal','🥅'],['golf','⛳'],['fishing','🎣'],['diving','🤿'],['archery','🏹'],
+          ['dart','🎯'],['video game','🎮'],['dice','🎲'],['chess','♟️'],['theater','🎭'],
+          ['art','🎨'],['frame','🖼️'],['circus','🎪'],['music','🎵'],['notes','🎶'],
+          ['microphone','🎤'],['headphones','🎧'],['musical score','🎼'],['piano','🎹'],
+          ['drum','🥁'],['saxophone','🎷'],['trumpet','🎺'],['guitar','🎸'],['violin','🎻'],
+          ['banjo','🪕'],['accordion','🪗'],['ticket','🎫'],['trophy','🏆'],['medal','🥇'],
+          ['skateboard','🛹'],['sled','🛷'],['ski','🎿'],['ice skate','⛸️'],['swimming','🏊'],
+          ['climbing','🧗'],['horse racing','🏇'],['cycling','🚴'],['weightlifting','🏋️'],
+          ['gymnastics','🤸'],['wrestling','🤼'],['yoga','🧘'],['running','🏃'],['walking','🚶'],
+          // Travel & places
+          ['car','🚗'],['taxi','🚕'],['suv','🚙'],['bus','🚌'],['racing car','🏎️'],
+          ['police car','🚓'],['ambulance','🚑'],['fire truck','🚒'],['van','🚐'],
+          ['truck','🚚'],['tractor','🚜'],['motorcycle','🏍️'],['bicycle','🚲'],
+          ['scooter','🛵'],['airplane','✈️'],['rocket','🚀'],['ufo','🛸'],['helicopter','🚁'],
+          ['boat','🛶'],['sailboat','⛵'],['ship','🚢'],['train','🚂'],['bullet train','🚆'],
+          ['metro','🚇'],['station','🚉'],['house','🏠'],['home','🏡'],['building','🏢'],
+          ['office','🏣'],['hospital','🏥'],['bank','🏦'],['hotel','🏨'],['school','🏫'],
+          ['castle','🏰'],['beach','🏖️'],['mountain','⛰️'],['volcano','🌋'],['desert','🏜️'],
+          ['island','🏝️'],['camping','🏕️'],['stadium','🏟️'],['map','🗺️'],['globe','🌍'],
+          ['compass','🧭'],['anchor','⚓'],['construction','🚧'],['traffic light','🚦'],
+          ['fuel','⛽'],['parking','🅿️'],['atm','🏧'],
+          // Objects & symbols
+          ['phone','📱'],['computer','💻'],['desktop','🖥️'],['keyboard','⌨️'],['mouse','🖱️'],
+          ['floppy disk','💾'],['cd','💿'],['dvd','📀'],['camera','📷'],['photo','📸'],
+          ['video camera','📹'],['movie camera','🎥'],['tv','📺'],['radio','📻'],
+          ['telephone','☎️'],['pager','📟'],['fax','📠'],['battery','🔋'],['plug','🔌'],
+          ['bulb','💡'],['flashlight','🔦'],['candle','🕯️'],['moneybag','💰'],['coin','🪙'],
+          ['credit card','💳'],['gem','💎'],['lock','🔒'],['unlock','🔓'],['key','🔑'],
+          ['hammer','🔨'],['axe','🪓'],['wrench','🔧'],['screwdriver','🪛'],['gear','⚙️'],
+          ['chain','⛓️'],['gun','🔫'],['knife','🔪'],['sword','⚔️'],['shield','🛡️'],
+          ['syringe','💉'],['pill','💊'],['microscope','🔬'],['telescope','🔭'],['dna','🧬'],
+          ['magnet','🧲'],['test tube','🧪'],['petri dish','🧫'],['robot toy','🤖'],
+          ['balloon','🎈'],['party','🎉'],['confetti','🎊'],['gift','🎁'],['ribbon','🎀'],
+          ['ticket stub','🎟️'],['trophy cup','🏆'],['medal ribbon','🎖️'],
+          ['book','📖'],['books','📚'],['notebook','📓'],['memo','📝'],['pencil','✏️'],
+          ['pen','🖊️'],['paperclip','📎'],['scissors','✂️'],['ruler','📏'],['triangle ruler','📐'],
+          ['pushpin','📌'],['calendar','📅'],['chart','📊'],['clipboard','📋'],
+          ['folder','📁'],['inbox','📥'],['outbox','📤'],['email','📧'],['letter','✉️'],
+          ['mail','📬'],['package','📦'],['shopping','🛍️'],['label','🏷️'],['bookmark','🔖'],
+          ['bell','🔔'],['no bell','🔕'],['megaphone','📣'],['loudspeaker','📢'],
+          ['speech bubble','💬'],['thought bubble','💭'],['zzz','💤'],
+          ['lightning','⚡'],['snowflake','❄️'],['fire flames','🔥'],['rainbow arc','🌈'],
+          ['sun','☀️'],['moon','🌙'],['crescent moon','🌛'],['stars','🌟'],['cloud','☁️'],
+          ['rain','🌧️'],['thunder','⛈️'],['snow','🌨️'],['wind','🌬️'],['tornado','🌪️'],
+          ['droplet','💧'],['wave','🌊'],['umbrella','☂️'],['snowman','⛄'],
+          ['earth','🌍'],['new moon','🌑'],['full moon','🌕'],['sunrise','🌅'],['sunset','🌇'],
+          ['night','🌃'],['city','🏙️'],['fireworks','🎆'],['sparkler','🎇'],
+          // Flags & misc
+          ['white flag','🏳️'],['black flag','🏴'],['checkered flag','🏁'],['triangular flag','🚩'],
+          ['crossed flags','🎌'],['warning','⚠️'],['no entry','⛔'],['prohibited','🚫'],
+          ['check mark','✅'],['cross mark','❌'],['question','❓'],['exclamation','❗'],
+          ['recycling','♻️'],['fleur de lis','⚜️'],['infinity','♾️'],['sos','🆘'],
+          ['soon','🔜'],['end','🔚'],['back','🔙'],['top','🔝'],['new','🆕'],['free','🆓'],
+        ];
+
+        // Category groups for the picker header tabs
+        const EMOJI_CATS = [
+          { label:'😀', name:'smileys', range:[0,84] },
+          { label:'👋', name:'gestures', range:[84,127] },
+          { label:'❤️', name:'hearts', range:[127,146] },
+          { label:'🐶', name:'animals', range:[146,222] },
+          { label:'🍕', name:'food', range:[222,316] },
+          { label:'⚽', name:'activities', range:[316,397] },
+          { label:'🚗', name:'travel', range:[397,456] },
+          { label:'📱', name:'objects', range:[456,9999] },
+        ];
+
+        function insertEmoji(em) {
+            const inp = document.getElementById('msg');
+            const pos = inp.selectionStart != null ? inp.selectionStart : inp.value.length;
+            inp.value = inp.value.slice(0, pos) + em + inp.value.slice(pos);
+            inp.focus();
+            inp.selectionStart = inp.selectionEnd = pos + [...em].length;
+        }
+
+        function buildEmojiGrid(pairs) {
+            const grid = document.getElementById('emoji-grid');
+            grid.innerHTML = '';
+            if (!pairs.length) {
+                grid.innerHTML = '<div style="color:#475569;font-size:11px;padding:8px;grid-column:1/-1">No results</div>';
+                return;
+            }
+            pairs.forEach(([name, em]) => {
+                const btn = document.createElement('div');
+                btn.className = 'emoji-btn';
+                btn.textContent = em;
+                btn.title = name;
+                btn.onclick = () => insertEmoji(em);
+                grid.appendChild(btn);
+            });
+        }
+
+        let activeCat = -1; // -1 = all
+
+        function renderEmojiCatTabs() {
+            const tabs = document.getElementById('emoji-cat-tabs');
+            if (!tabs) return;
+            tabs.innerHTML = '';
+            // All tab
+            const all = document.createElement('div');
+            all.className = 'emoji-cat-tab' + (activeCat === -1 ? ' active-cat' : '');
+            all.textContent = '🔠';
+            all.title = 'All';
+            all.onclick = () => { activeCat = -1; renderEmojiCatTabs(); buildEmojiGrid(EMOJI_DATA); document.getElementById('emoji-search').value = ''; };
+            tabs.appendChild(all);
+            EMOJI_CATS.forEach((cat, i) => {
+                const t = document.createElement('div');
+                t.className = 'emoji-cat-tab' + (activeCat === i ? ' active-cat' : '');
+                t.textContent = cat.label;
+                t.title = cat.name;
+                t.onclick = () => {
+                    activeCat = i;
+                    renderEmojiCatTabs();
+                    const [start, end] = cat.range;
+                    buildEmojiGrid(EMOJI_DATA.slice(start, end));
+                    document.getElementById('emoji-search').value = '';
+                };
+                tabs.appendChild(t);
+            });
+        }
+
+        window.filterEmoji = q => {
+            activeCat = -1;
+            renderEmojiCatTabs();
+            if (!q) { buildEmojiGrid(EMOJI_DATA); return; }
+            const lower = q.toLowerCase();
+            buildEmojiGrid(EMOJI_DATA.filter(([name]) => name.includes(lower)));
+        };
+
+        window.toggleEmojiPicker = () => {
+            const p = document.getElementById('emoji-picker');
+            const isOpen = p.classList.toggle('active');
+            if (isOpen) {
+                activeCat = -1;
+                renderEmojiCatTabs();
+                buildEmojiGrid(EMOJI_DATA);
+                document.getElementById('emoji-search').value = '';
+                document.getElementById('emoji-search').focus();
+            }
+        };
+
+        // Close emoji picker when clicking outside
+        document.addEventListener('click', e => {
+            const picker = document.getElementById('emoji-picker');
+            const btn = document.getElementById('emoji-btn');
+            if (!picker.contains(e.target) && e.target !== btn) {
+                picker.classList.remove('active');
+            }
+        });
+        lucide.createIcons();
+    </script>
+</body>
+</html>
